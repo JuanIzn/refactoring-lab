@@ -1,21 +1,21 @@
 public class Order {
     // this is the name
-    public String n; // name
+    public String name; // name
     public String e; // email
     public String t; // phone
     public int c; // customer type
-    public double p; // price
+    public double Price; // price
     public int q; // qty
     public String cc; // country
     public boolean a; // active
     public int d; // days
 
-    public Order(String n, String e, String t, int c, double p, int q, String cc, boolean a) {
-        this.n = n;
+    public Order(String name, String e, String t, int c, double Price, int q, String cc, boolean a) {
+        this.name = name;
         this.e = e;
         this.t = t;
         this.c = c;
-        this.p = p;
+        this.Price = Price;
         this.q = q;
         this.cc = cc;
         this.a = a;
@@ -26,10 +26,10 @@ public class Order {
         String result = "";
 
         if (a == true) {
-            if (n != null && n != "") {
-                if (p > 0) {
+            if (name != null && name != "") {
+                if (Price > 0) {
                     if (q > 0) {
-                        double total = p * q;
+                        double total = Price * q;
 
                         if (c == 3) {
                             if (total > 100) {
@@ -65,12 +65,12 @@ public class Order {
                             total = total + 5.99;
                         }
 
-                        result = "Order #" + System.currentTimeMillis() + "\n";
-                        result = result + "Customer: " + n + "\n";
-                        result = result + "Email: " + e + "\n";
-                        result = result + "Phone: " + t + "\n";
-                        result = result + "Items: " + q + " x $" + p + "\n";
-                        result = result + "Total: $" + String.format("%.2f", total) + "\n";
+                        result = "Order #" + System.currentTimeMillis() + "\name";
+                        result = result + "Customer: " + name + "\name";
+                        result = result + "Email: " + e + "\name";
+                        result = result + "Phone: " + t + "\name";
+                        result = result + "Items: " + q + " x $" + Price + "\name";
+                        result = result + "Total: $" + String.format("%.2f", total) + "\name";
 
                         if (flag == true) {
                             if (email == true) {
@@ -100,7 +100,7 @@ public class Order {
     }
 
     public double calc() {
-        return p * q;
+        return Price * q;
     }
 
     public void upd() {
@@ -111,7 +111,7 @@ public class Order {
     }
 
     public static void main(String[] args) {
-        System.out.println("=== Order Demo ===\n");
+        System.out.println("=== Order Demo ===\name");
 
         Order o1 = new Order("John Doe", "john@email.com", "555-1234", 1, 15.0, 2, "ES", true);
         System.out.println("Normal Order:");

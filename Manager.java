@@ -17,7 +17,7 @@ public class Manager {
         if (price <= 0)
             return;
 
-        Order o = new Order(name, email, phone, customerType, price, quantity, country, true);
+        Order order = new Order(name, email, phone, customerType, price, quantity, country, true);
 
         double discount = 0;
         if (customerType == 3 && price * quantity > 100) {
@@ -26,21 +26,21 @@ public class Manager {
             discount = 0.08;
         }
 
-        o.p = o.p * (1 - discount);
+        order.p = order.p * (1 - discount);
 
         if (expressShipping) {
-            o.p = o.p + 9.99;
+            order.p = order.p + 9.99;
         }
         if (giftWrap) {
-            o.p = o.p + 2.99;
+            order.p = order.p + 2.99;
         }
         if (insurance) {
-            o.p = o.p + 4.99;
+            order.p = order.p + 4.99;
         }
 
-        orders.add(o);
+        orders.add(order);
 
-        revenue = revenue + (o.p * o.q);
+        revenue = revenue + (order.p * order.q);
     }
 
     public String formatPrice(double p, int tier, int qty) {
@@ -55,14 +55,14 @@ public class Manager {
         return "$" + String.format("%.2f", total);
     }
 
-    public double getTotalWithTax(Order o) {
-        double sub = o.p * o.q;
+    public double getTotalWithTax(Order order) {
+        double sub = order.p * order.q;
 
-        if (o.cc.equals("ES")) {
+        if (order.cc.equals("ES")) {
             sub = sub * 1.21;
-        } else if (o.cc.equals("FR")) {
+        } else if (order.cc.equals("FR")) {
             sub = sub * 1.20;
-        } else if (o.cc.equals("DE")) {
+        } else if (order.cc.equals("DE")) {
             sub = sub * 1.19;
         } else {
             sub = sub * 1.15;
@@ -71,38 +71,38 @@ public class Manager {
         return sub;
     }
 
-    public double calculateDiscount(Order o) {
-        double total = o.p * o.q;
+    public double calculateDiscount(Order order) {
+        double total = order.p * order.q;
         double discount = 0;
 
-        if (o.c == 3 && total > 100) {
+        if (order.c == 3 && total > 100) {
             discount = total * 0.1;
-        } else if (o.c == 2 && total > 100) {
+        } else if (order.c == 2 && total > 100) {
             discount = total * 0.08;
         }
 
         return discount;
     }
 
-    public void save(Order o, boolean email, boolean pdf, boolean backup) {
-        if (o == null)
+    public void save(Order order, boolean email, boolean pdf, boolean backup) {
+        if (order == null)
             return;
-        if (!o.a)
+        if (!order.a)
             return;
 
-        double total = getTotalWithTax(o);
+        double total = getTotalWithTax(order);
 
-        System.out.println("INSERT INTO orders VALUES ('" + o.n + "', " + total + ")");
+        System.out.println("INSERT INTO orders VALUES ('" + order.n + "', " + total + ")");
 
         if (email) {
-            System.out.println("EMAIL: Order confirmed for " + o.n);
-            System.out.println("To: " + o.e);
+            System.out.println("EMAIL: Order confirmed for " + order.n);
+            System.out.println("To: " + order.e);
             System.out.println("Total: $" + total);
         }
 
         if (pdf) {
             System.out.println("PDF: Generating invoice...");
-            System.out.println("Customer: " + o.n);
+            System.out.println("Customer: " + order.n);
             System.out.println("Amount: $" + total);
         }
 
@@ -118,9 +118,9 @@ public class Manager {
 
         if (type == 1) {
             if (detailed) {
-                for (Order o : orders) {
-                    if (o.a || includeInactive) {
-                        report = report + "Order: " + o.n + " - $" + getTotalWithTax(o) + "\n";
+                for (Order order : orders) {
+                    if (order.a || includeInactive) {
+                        report = report + "Order: " + order.n + " - $" + getTotalWithTax(order) + "\n";
                     }
                 }
             } else {
@@ -128,21 +128,21 @@ public class Manager {
             }
         } else if (type == 2) {
             if (detailed) {
-                for (Order o : orders) {
-                    if (o.c == 3) {
-                        report = report + "GOLD: " + o.n + "\n";
-                    } else if (o.c == 2) {
-                        report = report + "SILVER: " + o.n + "\n";
+                for (Order order : orders) {
+                    if (order.c == 3) {
+                        report = report + "GOLD: " + order.n + "\n";
+                    } else if (order.c == 2) {
+                        report = report + "SILVER: " + order.n + "\n";
                     } else {
-                        report = report + "NORMAL: " + o.n + "\n";
+                        report = report + "NORMAL: " + order.n + "\n";
                     }
                 }
             } else {
                 int gold = 0, silver = 0, normal = 0;
-                for (Order o : orders) {
-                    if (o.c == 3)
+                for (Order order : orders) {
+                    if (order.c == 3)
                         gold++;
-                    else if (o.c == 2)
+                    else if (order.c == 2)
                         silver++;
                     else
                         normal++;
@@ -159,8 +159,8 @@ public class Manager {
         double max = 0;
         double min = 999999;
 
-        for (Order o : orders) {
-            double t = o.p * o.q;
+        for (Order order : orders) {
+            double t = order.p * order.q;
             avg = avg + t;
             if (t > max)
                 max = t;
@@ -189,36 +189,36 @@ public class Manager {
         }
     }
 
-    public boolean validateAndProcess(Order o, int action) {
-        if (o == null)
+    public boolean validateAndProcess(Order order, int action) {
+        if (order == null)
             return false;
-        if (o.n == null || o.n == "")
+        if (order.n == null || order.n == "")
             return false;
-        if (o.e == null || o.e == "")
+        if (order.e == null || order.e == "")
             return false;
-        if (o.p <= 0)
+        if (order.p <= 0)
             return false;
-        if (o.q <= 0)
+        if (order.q <= 0)
             return false;
 
         if (action == 1) {
-            orders.add(o);
-            revenue = revenue + o.p * o.q;
+            orders.add(order);
+            revenue = revenue + order.p * order.q;
             System.out.println("Order processed normally");
             return true;
         } else if (action == 2) {
-            orders.add(0, o);
-            revenue = revenue + o.p * o.q * 1.5;
+            orders.add(0, order);
+            revenue = revenue + order.p * order.q * 1.5;
             System.out.println("URGENT order processed");
             return true;
         } else if (action == 3) {
             System.out.println("Order sent for review");
-            if (o.p * o.q > 500) {
+            if (order.p * order.q > 500) {
                 System.out.println("High value - needs approval");
                 return false;
             }
-            orders.add(o);
-            revenue = revenue + o.p * o.q;
+            orders.add(order);
+            revenue = revenue + order.p * order.q;
             return true;
         }
 
