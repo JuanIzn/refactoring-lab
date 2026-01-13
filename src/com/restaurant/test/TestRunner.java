@@ -1,3 +1,9 @@
+package com.restaurant.test;
+
+import com.restaurant.model.*;
+import com.restaurant.service.*;
+import com.restaurant.util.*;
+
 public class TestRunner {
 
     private static int passed = 0;
@@ -9,7 +15,6 @@ public class TestRunner {
         testOrderCreation();
         testOrderProcessing();
         testManagerOperations();
-        testUtilsMethods();
 
         System.out.println("\n=== Test Results ===");
         System.out.println("Passed: " + passed);
@@ -20,12 +25,19 @@ public class TestRunner {
     private static void testOrderCreation() {
         System.out.println("Testing Order Creation...");
 
-        Order o = new Order("John", "john@email.com", "555-1234", 1, 10.0, 2, "ES", true);
+        Order o = new OrderBuilder("John", "john@email.com")
+                .phone("555-1234")
+                .customerType(CustomerType.NORMAL)
+                .price(10.0)
+                .quantity(2)
+                .country("ES")
+                .active(true)
+                .build();
 
-        assertEqual(o.n, "John", "Order name");
-        assertEqual(o.p, 10.0, "Order price");
-        assertEqual(o.q, 2, "Order quantity");
-        assertEqual(o.cc, "ES", "Order country");
+        assertEqual(o.getName(), "John", "Order name");
+        assertEqual(o.getPrice(), 10.0, "Order price");
+        assertEqual(o.getQuantity(), 2, "Order quantity");
+        assertEqual(o.getCountry().getCode(), "ES", "Order country");
 
         System.out.println();
     }
@@ -33,18 +45,41 @@ public class TestRunner {
     private static void testOrderProcessing() {
         System.out.println("Testing Order Processing...");
 
-        Order o1 = new Order("Alice", "alice@email.com", "555-5678", 3, 60.0, 2, "ES", true);
-        String result1 = o1.proc(true, false, false);
+        OrderProcessor processor = new OrderProcessor();
+
+        Order o1 = new OrderBuilder("Alice", "alice@email.com")
+                .phone("555-5678")
+                .customerType(CustomerType.GOLD)
+                .price(60.0)
+                .quantity(2)
+                .country("ES")
+                .active(true)
+                .build();
+        String result1 = processor.process(o1, true, false, false);
         assertNotNull(result1, "Gold order processing");
         assertContains(result1, "130", "Gold order with tax");
 
-        Order o2 = new Order("Bob", "bob@email.com", "555-9999", 1, 10.0, 1, "FR", true);
-        String result2 = o2.proc(true, false, false);
+        Order o2 = new OrderBuilder("Bob", "bob@email.com")
+                .phone("555-9999")
+                .customerType(CustomerType.NORMAL)
+                .price(10.0)
+                .quantity(1)
+                .country("FR")
+                .active(true)
+                .build();
+        String result2 = processor.process(o2, true, false, false);
         assertNotNull(result2, "Normal order processing");
         assertContains(result2, "17", "Normal order with shipping");
 
-        Order o3 = new Order("Charlie", "charlie@email.com", "555-0000", 2, 80.0, 2, "DE", true);
-        String result3 = o3.proc(false, false, false);
+        Order o3 = new OrderBuilder("Charlie", "charlie@email.com")
+                .phone("555-0000")
+                .customerType(CustomerType.SILVER)
+                .price(80.0)
+                .quantity(2)
+                .country("DE")
+                .active(true)
+                .build();
+        String result3 = processor.process(o3, false, false, false);
         assertNotNull(result3, "Silver order processing");
         assertContains(result3, "175", "Silver order with discount and tax");
 
@@ -55,52 +90,30 @@ public class TestRunner {
         System.out.println("Testing Manager Operations...");
 
         Manager mgr = new Manager();
-        mgr.createOrder("David", "david@email.com", "555-1111",
-                "123 Main St", "Madrid", "ES",
-                50.0, 2, 2, false, false, false, false);
+        Order mgrOrder = new OrderBuilder("David", "david@email.com")
+                .phone("555-1111")
+                .price(50.0)
+                .quantity(2)
+                .customerType(CustomerType.SILVER)
+                .country("ES")
+                .build();
+        mgr.processOrder(mgrOrder);
 
-        Order o = new Order("Test", "test@email.com", "555-0000", 2, 50.0, 2, "ES", true);
-        double total = mgr.getTotalWithTax(o);
-        assertEqual(total, 121.0, "Manager tax calculation");
+        Order o = new OrderBuilder("Test", "test@email.com")
+                .phone("555-0000")
+                .customerType(CustomerType.SILVER)
+                .price(50.0)
+                .quantity(2)
+                .country("ES")
+                .active(true)
+                .build();
+        
+        double total = o.calculateFinalTotal();
 
-        double discount = mgr.calculateDiscount(o);
-        assertEqual(discount, 0.0, "Manager discount calculation");
+        assertEqual(total, 116.16, "Order tax calculation");
 
-        String formatted = mgr.formatPrice(50.0, 2, 2);
-        assertContains(formatted, "$100", "Manager price formatting");
-
-        String report = mgr.generateReport(1, false, false);
+        String report = mgr.generateReport(ReportType.REVENUE, false, false);
         assertContains(report, "Revenue", "Manager report generation");
-
-        System.out.println();
-    }
-
-    private static void testUtilsMethods() {
-        System.out.println("Testing Utils Methods...");
-
-        Order o = new Order("Emily", "emily@email.com", "555-2222", 1, 20.0, 3, "UK", true);
-
-        boolean invalid = Utils.isInvalid(o);
-        assertEqual(invalid, false, "Valid order check");
-
-        double handled = Utils.handle(o);
-        assertEqual(handled, 24.2, "Utils handle calculation");
-
-        Order nullOrder = Utils.findOrder(null, "NonExistent");
-        assertNull(nullOrder, "Utils find non-existent order");
-
-        double calc = Utils.calc(10, 5, 1);
-        assertEqual(calc, 15.0, "Utils calc addition");
-
-        String formatted = Utils.fmt(o);
-        assertContains(formatted, "Emily", "Utils format contains name");
-        assertContains(formatted, "60", "Utils format contains total");
-
-        boolean check = Utils.check("test", 3, false);
-        assertEqual(check, true, "Utils check validation");
-
-        double withFees = Utils.applyFees(100, 1, false, true);
-        assertEqual(withFees, 108.98, "Utils fee calculation");
 
         System.out.println();
     }

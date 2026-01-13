@@ -1,14 +1,17 @@
+package com.restaurant.util;
+
+import com.restaurant.model.*;
 import java.util.*;
 
 public class Utils {
 
     public static double handle(Order o) {
         // increase by tax
-        double t = o.p * 1.21;
+        double t = o.getPrice() * 1.21;
 
-        o.d = o.d + 1;
+        o.setDaysActive(o.getDaysActive() + 1);
 
-        System.out.println("Processing order for " + o.n);
+        System.out.println("Processing order for " + o.getName());
 
         return t;
     }
@@ -16,25 +19,26 @@ public class Utils {
     public static boolean isInvalid(Order o) {
         if (o == null)
             return true;
-        if (!o.a)
+        if (!o.isActive())
             return true;
-        if (o.p <= 0)
+        if (o.getPrice() <= 0)
             return true;
-        if (o.q <= 0)
+        if (o.getQuantity() <= 0)
             return true;
-        if (o.n == null || o.n == "")
+        if (o.getName() == null || o.getName().isEmpty())
             return true;
         return false;
     }
 
     public static boolean isNotReady(Order o) {
-        return isInvalid(o) || o.d < 1;
+        return isInvalid(o) || o.getDaysActive() < 1;
     }
 
     public static Order findOrder(List<Order> orders, String name) {
+        if (orders == null || name == null) return null;
         try {
             for (Order o : orders) {
-                if (o.n.equals(name)) {
+                if (name.equals(o.getName())) {
                     return o;
                 }
             }
@@ -44,39 +48,23 @@ public class Utils {
         return null;
     }
 
-    public static void doStuff(String n, String e, String p, int t, double v) {
-        System.out.println("Processing: " + n);
-
-        if (t == 1) {
-            System.out.println("Type 1 processing");
-            v = v * 1.1;
-        } else if (t == 2) {
-            System.out.println("Type 2 processing");
-            v = v * 1.2;
-        }
-
-        if (v > 100) {
-            System.out.println("High value alert!");
-        }
-    }
-
-    public static double calc(double a, double b, int op) {
+    public static double calculate(double a, double b, MathOperation op) {
         double result = 0;
 
         switch (op) {
-            case 1:
+            case ADD:
                 result = a + b;
                 System.out.println("Addition: " + result);
                 break;
-            case 2:
+            case SUBTRACT:
                 result = a - b;
                 System.out.println("Subtraction: " + result);
                 break;
-            case 3:
+            case MULTIPLY:
                 result = a * b;
                 System.out.println("Multiplication: " + result);
                 break;
-            case 4:
+            case DIVIDE:
                 if (b != 0) {
                     result = a / b;
                     System.out.println("Division: " + result);
@@ -93,51 +81,53 @@ public class Utils {
         return result;
     }
 
+    // Legacy support for int operation codes
+    public static double calc(double a, double b, int opCode) {
+        try {
+            return calculate(a, b, MathOperation.fromCode(opCode));
+        } catch (IllegalArgumentException e) {
+            System.out.println("Unknown operation");
+            return -888888;
+        }
+    }
+
     public static String fmt(Order o) {
-        // we need to format the order for display
-        // first get the data
-        String s = ""; // string for result
 
-        // add the name
-        s = s + o.n;
+        StringBuilder s = new StringBuilder(); 
 
-        // add separator
-        s = s + " | ";
+        s.append(o.getName());
 
-        // add email
-        s = s + o.e;
+        s.append(" | ");
 
-        // add another separator
-        s = s + " | ";
+        s.append(o.getEmail());
 
-        // calculate total
-        double t = o.p * o.q; // t is total
+        s.append(" | ");
 
-        // add total
-        s = s + "$" + t;
+        double t = o.getPrice() * o.getQuantity(); 
 
-        return s;
+        s.append("$").append(t);
+
+        return s.toString();
     }
 
     public static void process(Order o) {
         try {
-            String upper = o.n.toUpperCase();
+            String upper = o.getName().toUpperCase();
             System.out.println(upper);
         } catch (NullPointerException e) {
-            // do nothing
+            
         } catch (Exception e) {
-            // ignore
         }
     }
 
     public static boolean check(String s, int l, boolean f) {
         if (s == null)
             return false;
-        if (s == "")
+        if (s.isEmpty())
             return false;
         if (s.length() < l)
             return false;
-        if (f == true) {
+        if (f) {
             if (s.contains(" "))
                 return false;
         }
@@ -160,20 +150,21 @@ public class Utils {
         }
     }
 
-    public static double applyFees(double amount, int customerType, boolean premium, boolean express) {
+    public static double applyFees(double amount, int customerTypeVal, boolean premium, boolean express) {
         double fee = 0;
+        CustomerType customerType = CustomerType.fromValue(customerTypeVal);
 
-        if (customerType == 1) {
+        if (customerType == CustomerType.NORMAL) {
             fee = 2.99;
             if (express) {
                 fee = fee + 5.99;
             }
-        } else if (customerType == 2) {
+        } else if (customerType == CustomerType.SILVER) {
             fee = 1.99;
             if (express) {
                 fee = fee + 4.99;
             }
-        } else if (customerType == 3) {
+        } else if (customerType == CustomerType.GOLD) {
             fee = 0;
             if (express) {
                 fee = fee + 3.99;
